@@ -1,14 +1,14 @@
 function multiplyMatVect(v, m)
-	local w = {}
-	w[1] = v[1] * m[1][1] + v[2] * m[1][2] + v[3] * m[1][3] + m[1][4] -- assumes v[4] is 1
-	w[2] = v[1] * m[2][1] + v[2] * m[2][2] + v[3] * m[2][3] + m[2][4]
-	w[3] = v[1] * m[3][1] + v[2] * m[3][2] + v[3] * m[3][3] + m[3][4]
-	q = v[1] * m[4][1] + v[2] * m[4][2] + v[3] * m[4][3] + m[4][4]
+	local w = Vec3d()
+	w.x = v.x * m[1][1] + v.y * m[1][2] + v.z * m[1][3] + m[1][4] -- assumes v[4] is 1
+	w.y = v.x * m[2][1] + v.y * m[2][2] + v.z * m[2][3] + m[2][4]
+	w.z = v.x * m[3][1] + v.y * m[3][2] + v.z * m[3][3] + m[3][4]
+	q = v.x * m[4][1] + v.y * m[4][2] + v.z * m[4][3] + m[4][4]
 
 	if q ~= 0 then
-		w[1] = w[1] / q
-		w[2] = w[2] / q
-		w[3] = w[3] / q
+		w.x = w.x / q
+		w.y = w.y / q
+		w.z = w.z / q
 	end
 
 	return w
@@ -17,7 +17,13 @@ end
 function drawTriangle(mode, triCoords, color, outlineColor, thickness)
 	if mode == 'fill' or mode == 'all' then
 		if color then
-			love.graphics.setColor(color[1], color[2], color[3])
+			if color[4] then
+				love.graphics.setColor(color[1], color[2], color[3], color[4])
+			else
+				love.graphics.setColor(color[1], color[2], color[3], 1)
+			end
+		else
+			love.graphics.setColor(1, 1, 1, 1)
 		end
 
 		love.graphics.polygon('fill', triCoords)
@@ -25,11 +31,19 @@ function drawTriangle(mode, triCoords, color, outlineColor, thickness)
 
 	if mode == 'all' or mode == 'line' then
 		if outlineColor then
-			love.graphics.setColor(outlineColor[1], outlineColor[2], outlineColor[3])
+			if outlineColor[4] then
+				love.graphics.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineColor[4])
+			else
+				love.graphics.setColor(outlineColor[1], outlineColor[2], outlineColor[3])
+			end
+		else
+			love.graphics.setColor(0, 1, 0, 1)
 		end
 		
 		if thickness then
 			love.graphics.setLineWidth(thickness)
+		else
+			love.graphics.setLineWidth(1)
 		end
 
 		drawLines(triCoords)
@@ -55,25 +69,11 @@ function drawLines(coords)
 end
 
 function add(v, w)
-    assert(#v == #w, "vectors must be the same length")
-
-    local sum = {}
-    for i = 1, #v do 
-        sum[i] = v[i] + w[i]
-    end
-
-    return sum
+    return {x = v.x + w.x, y = v.y + w.y, z = v.z + w.z}
 end
 
 function subtract(v, w)
-    assert(#v == #w, "vectors must be the same length")
-
-    local difference = {}
-    for i = 1, #v do 
-        difference[i] = v[i] - w[i]
-    end
-
-    return difference
+    return {x = v.x - w.x, y = v.y - w.y, z = v.z - w.z}
 end
 
 function length(v)
@@ -81,21 +81,11 @@ function length(v)
 end
 
 function dot(v, w)
-    assert(#v == #w, "vectors must be the same length")
-
-    local dp = 0
-    for i = 1, #v do
-        dp = dp + v[i] * w[i]
-    end
-
-    return dp
+    return {v.x * w.x + v.y + w.y + v.z + w.z}
 end
 
 function cross(v, w)
-    local vx, vy, vz = v[1], v[2], v[3]
-    local wx, wy, wz = w[1], w[2], w[3]
-
-    return {vy * wz - vz * wy, vz * wx - vx * wz, vx * wy - vy * wx}
+    return {x = v.y * w.z - v.z * w.y, y = v.z * w.x - v.x * w.z, z = v.x * w.y - v.y * w.x}
 end
 
 function scale(scalar, v)
@@ -112,7 +102,7 @@ function unit(v)
 end
 
 function normal(tri)
-    return cross(subtract(tri[2], tri[1]), subtract(tri[3], tri[1]))
+    return cross(subtract(tri.p[2], tri.p[1]), subtract(tri.p[3], tri.p[1]))
 end
 
 function avg(m)
