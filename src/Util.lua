@@ -81,7 +81,7 @@ function length(v)
 end
 
 function dot(v, w)
-    return {v.x * w.x + v.y + w.y + v.z + w.z}
+    return v.x * w.x + v.y + w.y + v.z + w.z
 end
 
 function cross(v, w)
@@ -89,12 +89,7 @@ function cross(v, w)
 end
 
 function scale(scalar, v)
-    local scaled = {}
-    for i = 1, #v do 
-        scaled[i] = v[i] * scalar
-    end
-
-    return scaled
+    return {x = v.x * scalar, y = v.y * scalar, z = v.z * scalar}
 end
 
 function unit(v)
@@ -118,3 +113,8 @@ function avg(m)
 
 	return scale(1 / #m, sum)
 end
+
+-- DEBUGGING
+
+-- print(v.x .. ", " .. v.y .. ", " .. v.z)
+-- print(w.x .. ", " .. w.y .. ", " .. w.z)

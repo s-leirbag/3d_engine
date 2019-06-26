@@ -13,8 +13,8 @@ function love.load()
     love.keyboard.keysPressed = {}
 
     theta = 0
-    cam = Vec3d{0, 0, 0}
-    light = Vec3d{0, 0, -1}
+    cam = Vec3d(0, 0, 0)
+    light = Vec3d(0, 0, -1)
 end
 
 function love.update(dt)
@@ -69,6 +69,12 @@ function love.draw()
         -- draw if facing camera
         local unitNormal = unit(normal(triTranslated))
         local ray = subtract(triTranslated.p[1], cam)
+        -- print(ray.x .. ", " .. ray.y .. ", " .. ray.z)
+        -- print(unitNormal.x .. ", " .. unitNormal.y .. ", " .. unitNormal.z)
+        print(length(normal(triTranslated)))
+        print(length(unitNormal))                   -- unit() returning ved3d with length ~= 1????
+
+        -- print(dot(unitNormal, ray))
         if dot(unitNormal, ray) < 0 then
             -- light
             unitLight = unit(light)
@@ -95,21 +101,20 @@ function love.draw()
     end
 
     -- painter's sort
-    -- sort from 
+    -- sort trianglesToRender from farthest to closest
+    -- ...
     
 
     -- draw triangles (NEEDED)
     for k, triangle in ipairs(trianglesToRender) do
         local coords = {}
         for i = 1, 3 do
-            table.insert(coords, triangle.p[i][1])
-            table.insert(coords, triangle.p[i][2])
+            table.insert(coords, triangle.p[i].x)
+            table.insert(coords, triangle.p[i].y)
         end
 
-        -- if k % 2 == 1 then
-        --     drawTriangle('all', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
-        -- end
-
+        -- make identical triangle but all black first to clear?
+        print(triangle.shade)
         drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
@@ -136,3 +141,8 @@ function updateMouse(dt)
     mouseX, mouseY = love.mouse.getPosition()
     mouseX, mouseY = push:toGame(mouseX, mouseY)
 end
+
+-- DEBUGGING
+
+-- print(v.x .. ", " .. v.y .. ", " .. v.z)
+-- print(w.x .. ", " .. w.y .. ", " .. w.z)
