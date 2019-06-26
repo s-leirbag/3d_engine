@@ -16,6 +16,7 @@ function love.load()
 
     theta = 0
     cam = {0, 0, 0}
+    light = {0, 0, -1}
 end
 
 function love.resize(w, h)
@@ -86,6 +87,10 @@ function love.draw()
         local unitNormal = unit(normal(triTranslated))
         local ray = subtract(triTranslated[1], cam)
         if dot(unitNormal, ray) < 0 then
+            -- light
+            unitLight = unit(light)
+            triProjected[4] = dot(unitLight, unitNormal)
+
             -- project from 3d to 2d (NEEDED)
             local triProjected = {}
             triProjected[1] = multiplyMatVect(triTranslated[1], matProj)
@@ -99,9 +104,9 @@ function love.draw()
 
             -- take coordinates out and scale (NEEDED)
             local triProjectedCoords = {}
-            for k, vector in pairs(triProjected) do
-                vector[1] = vector[1] / 2 * VIRTUAL_WIDTH
-                vector[2] = vector[2] / 2 * VIRTUAL_HEIGHT
+            for i = 1, 3 do
+                triProjected[1] = triProjected[1] / 2 * VIRTUAL_WIDTH
+                triProjected[2] = triProjected[2] / 2 * VIRTUAL_HEIGHT
             end
             table.insert(trianglesToRender, triProjected)
         end 
