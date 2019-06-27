@@ -50,17 +50,6 @@ function drawTriangle(mode, triCoords, color, outlineColor, thickness)
 	end
 end
 
-function coordsOut(tri)
-    local coords = {}
-    for k, vector in ipairs(tri) do
-        for i, coord in pairs(vector) do
-            table.insert(coords, coord)
-        end
-    end
-
-    return coords
-end
-
 function drawLines(coords)
     for i = 1, #coords / 2 - 1 do
         love.graphics.line(coords[i * 2 - 1], coords[i * 2], coords[i * 2 + 1], coords[i * 2 + 2])
@@ -100,18 +89,47 @@ function normal(tri)
     return cross(subtract(tri.p[2], tri.p[1]), subtract(tri.p[3], tri.p[1]))
 end
 
-function avg(m)
-	local vLen = #m[1]
-	for k, vector in pairs(m) do
-		assert(#vector == vLen, "vectors must be the same length")
-	end
-	
+function avg(m)	
 	local sum = m[1]
 	for i = 2, #m do
 		sum = add(sum, m[i])
 	end
 
 	return scale(1 / #m, sum)
+end
+
+function loadFromObjFile(filename)
+	filename = 'src/obj_files/' .. filename
+
+	-- make sure file exists
+	assert(fileExists(filename), 'file does not exist')
+
+	local verts = {}
+	local fh = assert(io.open(filename, 'rb')) -- fh means file handle, an open file with a current position
+	
+	for line in fh:lines() do
+		print(line:sub(1, 1))
+		if line[1] == 'v' then
+			-- local v = Vec3d()
+			-- table.insert(verts, v)
+		elseif line[1] == 'f' then
+
+		end
+	end
+
+end
+
+function fileExists(path)
+  local file = io.open(path, "rb")
+  if file then file:close() end
+  return file ~= nil
+end
+
+function readall(filename)
+  local fh = assert(io.open(filename, "rb")) -- The mode string may also have a b at the end, which is needed in some systems to open the file in binary mode. This string is exactly what is used in the standard C function fopen.
+  local contents = assert(fh:read("a")) -- "a" in Lua 5.3; "*a" in Lua 5.1 and 5.2
+  fh:close()
+  return contents
 end
 
 -- DEBUGGING

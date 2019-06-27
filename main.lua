@@ -15,6 +15,8 @@ function love.load()
     theta = 0
     cam = Vec3d(0, 0, 0)
     light = Vec3d(0, 0, -1)
+
+    loadFromObjFile('VideoShip.obj')
 end
 
 function love.update(dt)
@@ -45,7 +47,7 @@ function love.draw()
     push:start()
 
     local trianglesToRender = {}
-    for k, tri in pairs(cube) do
+    for k, tri in pairs(stack) do
         local triRotatedZ = Triangle()
         local triRotatedZX = Triangle()
         local triTranslated = Triangle()
@@ -62,30 +64,17 @@ function love.draw()
         triRotatedZX.p[3] = multiplyMatVect(triRotatedZ.p[3], matRotX)
 
         -- push away from camera (TEMPORARY)
-        triTranslated.p[1] = add(triRotatedZX.p[1], Vec3d(0, 0, 8))
-        triTranslated.p[2] = add(triRotatedZX.p[2], Vec3d(0, 0, 8))
-        triTranslated.p[3] = add(triRotatedZX.p[3], Vec3d(0, 0, 8))
+        triTranslated.p[1] = add(triRotatedZX.p[1], Vec3d(0, 0, 3))
+        triTranslated.p[2] = add(triRotatedZX.p[2], Vec3d(0, 0, 3))
+        triTranslated.p[3] = add(triRotatedZX.p[3], Vec3d(0, 0, 3))
 
         -- draw if facing camera
         local unitNormal = unit(normal(triTranslated))
-        local normal = normal(triTranslated)
-        print(normal.x .. ", " .. normal.y .. ", " .. normal.z)
-
         local ray = subtract(triTranslated.p[1], cam)
-        -- print(ray.x .. ", " .. ray.y .. ", " .. ray.z)
-
-        -- print(triTranslated.p[1].x .. ", " .. triTranslated.p[1].y .. ", " .. triTranslated.p[1].z)
-        -- print(triTranslated.p[2].x .. ", " .. triTranslated.p[2].y .. ", " .. triTranslated.p[2].z)
-        -- print(triTranslated.p[3].x .. ", " .. triTranslated.p[3].y .. ", " .. triTranslated.p[3].z)
-
-        -- print(length(normal(triTranslated)))
-        -- print(length(unitNormal))                   -- unit() returning ved3d with length ~= 1???? 
-
-        -- print(dot(unitNormal, ray))
         if dot(unitNormal, ray) < 0 then
             -- light
-            unitLight = unit(light)
-            triProjected.p[4] = dot(unitLight, unitNormal)
+            local unitLight = unit(light)
+            triProjected.shade = dot(unitLight, unitNormal)
 
             -- project from 3d to 2d (NEEDED)
             triProjected.p[1] = multiplyMatVect(triTranslated.p[1], matProj)
@@ -100,17 +89,20 @@ function love.draw()
             -- take coordinates out and scale (NEEDED)
             local triProjectedCoords = {}
             for i = 1, 3 do
-                triProjected.p[i][1] = triProjected.p[i][1] / 2 * VIRTUAL_WIDTH
-                triProjected.p[i][2] = triProjected.p[i][2] / 2 * VIRTUAL_HEIGHT
+                triProjected.p[i].x = triProjected.p[i].x / 2 * VIRTUAL_WIDTH
+                triProjected.p[i].y = triProjected.p[i].y / 2 * VIRTUAL_HEIGHT
             end
             table.insert(trianglesToRender, triProjected)
         end 
     end
 
-    -- painter's sort
-    -- sort trianglesToRender from farthest to closest
-    -- ...
-    
+    -- sort from farthest to closest (NEEDED)
+    table.sort(trianglesToRender, function(a, b)
+        local aCenterZ = (a.p[1].z + a.p[2].z + a.p[3].z) / 3
+        local bCenterZ = (b.p[1].z + b.p[2].z + b.p[3].z) / 3
+
+        return aCenterZ > bCenterZ
+    end)
 
     -- draw triangles (NEEDED)
     for k, triangle in ipairs(trianglesToRender) do
@@ -121,7 +113,7 @@ function love.draw()
         end
 
         -- make identical triangle but all black first to clear?
-        -- print(triangle.shade)
+        drawTriangle('all', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
         drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
@@ -152,4 +144,3 @@ end
 -- DEBUGGING
 
 -- print(v.x .. ", " .. v.y .. ", " .. v.z)
--- print(w.x .. ", " .. w.y .. ", " .. w.z)
