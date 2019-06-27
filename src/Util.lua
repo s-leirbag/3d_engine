@@ -69,11 +69,11 @@ function drawLines(coords)
 end
 
 function add(v, w)
-    return {x = v.x + w.x, y = v.y + w.y, z = v.z + w.z}
+    return Vec3d(v.x + w.x, v.y + w.y, v.z + w.z)
 end
 
 function subtract(v, w)
-    return {x = v.x - w.x, y = v.y - w.y, z = v.z - w.z}
+    return Vec3d(v.x - w.x, v.y - w.y, v.z - w.z)
 end
 
 function length(v)
@@ -81,15 +81,15 @@ function length(v)
 end
 
 function dot(v, w)
-    return v.x * w.x + v.y + w.y + v.z + w.z
+    return v.x * w.x + v.y * w.y + v.z * w.z
 end
 
 function cross(v, w)
-    return {x = v.y * w.z - v.z * w.y, y = v.z * w.x - v.x * w.z, z = v.x * w.y - v.y * w.x}
+    return Vec3d(v.y * w.z - v.z * w.y, v.z * w.x - v.x * w.z, v.x * w.y - v.y * w.x)
 end
 
 function scale(scalar, v)
-    return {x = v.x * scalar, y = v.y * scalar, z = v.z * scalar}
+    return Vec3d(v.x * scalar, v.y * scalar, v.z * scalar)
 end
 
 function unit(v)

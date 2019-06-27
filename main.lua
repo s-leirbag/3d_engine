@@ -44,7 +44,7 @@ end
 function love.draw()
     push:start()
 
-    trianglesToRender = {}
+    local trianglesToRender = {}
     for k, tri in pairs(cube) do
         local triRotatedZ = Triangle()
         local triRotatedZX = Triangle()
@@ -68,11 +68,18 @@ function love.draw()
 
         -- draw if facing camera
         local unitNormal = unit(normal(triTranslated))
+        local normal = normal(triTranslated)
+        print(normal.x .. ", " .. normal.y .. ", " .. normal.z)
+
         local ray = subtract(triTranslated.p[1], cam)
         -- print(ray.x .. ", " .. ray.y .. ", " .. ray.z)
-        -- print(unitNormal.x .. ", " .. unitNormal.y .. ", " .. unitNormal.z)
-        print(length(normal(triTranslated)))
-        print(length(unitNormal))                   -- unit() returning ved3d with length ~= 1????
+
+        -- print(triTranslated.p[1].x .. ", " .. triTranslated.p[1].y .. ", " .. triTranslated.p[1].z)
+        -- print(triTranslated.p[2].x .. ", " .. triTranslated.p[2].y .. ", " .. triTranslated.p[2].z)
+        -- print(triTranslated.p[3].x .. ", " .. triTranslated.p[3].y .. ", " .. triTranslated.p[3].z)
+
+        -- print(length(normal(triTranslated)))
+        -- print(length(unitNormal))                   -- unit() returning ved3d with length ~= 1???? 
 
         -- print(dot(unitNormal, ray))
         if dot(unitNormal, ray) < 0 then
@@ -114,7 +121,7 @@ function love.draw()
         end
 
         -- make identical triangle but all black first to clear?
-        print(triangle.shade)
+        -- print(triangle.shade)
         drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
