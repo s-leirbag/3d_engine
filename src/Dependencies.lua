@@ -4,7 +4,7 @@ Timer = require 'lib/knife.timer'
 
 require 'src/structs/Vec3d'
 require 'src/structs/Triangle'
+require 'src/Util'
 require 'src/constants'
 require 'src/shapes'
 require 'src/StateMachine'
-require 'src/Util'

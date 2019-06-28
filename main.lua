@@ -12,11 +12,10 @@ function love.load()
 
     love.keyboard.keysPressed = {}
 
+    matProj = matrix_makeProjection(FOV, VIRTUAL_HEIGHT / VIRTUAL_WIDTH, 0.1, 1000)
     theta = 0
     cam = Vec3d(0, 0, 0)
     light = Vec3d(0, 0, -1)
-
-    ship = loadFromObjFile('VideoShip.obj')
 end
 
 function love.update(dt)
@@ -24,19 +23,12 @@ function love.update(dt)
 
     theta = theta + dt * 50
 
-    matRotZ = {
-        {math.cos(math.rad(theta)), -math.sin(math.rad(theta)), 0, 0},
-        {math.sin(math.rad(theta)), math.cos(math.rad(theta)), 0, 0},
-        {0, 0, 1, 0},
-        {0, 0, 0, 1}
-    }
+    matRotZ = matrix_makeRotationZ(theta)
+    matRotX = matrix_makeRotationX(theta)
+    matTrans = matrix_makeTranslation(0, 0, 8)
 
-    matRotX = {
-        {1, 0, 0, 0},
-        {0, math.cos(math.rad(theta)), -math.sin(math.rad(theta)), 0},
-        {0, math.sin(math.rad(theta)), math.cos(math.rad(theta)), 0},
-        {0, 0, 0, 1}
-    }
+    matWorld = matrix_multiplyMatrix(matRotZ, matRotX)
+    matWorld = matrix_multiplyMatrix(matWorld, matTrans)
 
     love.keyboard.keysPressed = {}
 
@@ -48,43 +40,35 @@ function love.draw()
 
     local trianglesToRender = {}
     for k, tri in pairs(ship) do
-        local triRotatedZ = Triangle()
-        local triRotatedZX = Triangle()
-        local triTranslated = Triangle()
+        local triTransformed = Triangle()
         local triProjected = Triangle()
 
-        -- rotate around z (TEMPORARY)
-        triRotatedZ.p[1] = multiplyMatVect(tri.p[1], matRotZ)
-        triRotatedZ.p[2] = multiplyMatVect(tri.p[2], matRotZ)
-        triRotatedZ.p[3] = multiplyMatVect(tri.p[3], matRotZ)
-
-        -- rotate around x (TEMPORARY)
-        triRotatedZX.p[1] = multiplyMatVect(triRotatedZ.p[1], matRotX)
-        triRotatedZX.p[2] = multiplyMatVect(triRotatedZ.p[2], matRotX)
-        triRotatedZX.p[3] = multiplyMatVect(triRotatedZ.p[3], matRotX)
-
-        -- push away from camera (TEMPORARY)
-        triTranslated.p[1] = add(triRotatedZX.p[1], Vec3d(0, 0, 8))
-        triTranslated.p[2] = add(triRotatedZX.p[2], Vec3d(0, 0, 8))
-        triTranslated.p[3] = add(triRotatedZX.p[3], Vec3d(0, 0, 8))
+        -- transform
+        triTransformed.p[1] = matrix_multiplyVector(matWorld, tri.p[1])
+        triTransformed.p[2] = matrix_multiplyVector(matWorld, tri.p[2])
+        triTransformed.p[3] = matrix_multiplyVector(matWorld, tri.p[3])
 
         -- draw if facing camera
-        local unitNormal = unit(normal(triTranslated))
-        local ray = subtract(triTranslated.p[1], cam)
-        if dot(unitNormal, ray) < 0 then
+        local unitNormal = vector_unit(vector_normal(triTransformed))
+        local ray = vector_subtract(triTransformed.p[1], cam)
+        if vector_dot(unitNormal, ray) < 0 then
             -- light
-            local unitLight = unit(light)
-            triProjected.shade = dot(unitLight, unitNormal)
+            local unitLight = vector_unit(light)
+            triProjected.shade = math.max(0.1, vector_dot(unitLight, unitNormal))
 
             -- project from 3d to 2d (NEEDED)
-            triProjected.p[1] = multiplyMatVect(triTranslated.p[1], matProj)
-            triProjected.p[2] = multiplyMatVect(triTranslated.p[2], matProj)
-            triProjected.p[3] = multiplyMatVect(triTranslated.p[3], matProj)
+            triProjected.p[1] = matrix_multiplyVector(matProj, triTransformed.p[1])
+            triProjected.p[2] = matrix_multiplyVector(matProj, triTransformed.p[2])
+            triProjected.p[3] = matrix_multiplyVector(matProj, triTransformed.p[3])
+            triProjected.p[1] = vector_scale(1 / triProjected.p[1].w, triProjected.p[1])
+            triProjected.p[2] = vector_scale(1 / triProjected.p[2].w, triProjected.p[2])
+            triProjected.p[3] = vector_scale(1 / triProjected.p[3].w, triProjected.p[3])
 
             -- shift from -1, 1 to 0, 2 (NEEDED)
-            triProjected.p[1] = add(triProjected.p[1], Vec3d(1, 1, 0))
-            triProjected.p[2] = add(triProjected.p[2], Vec3d(1, 1, 0))
-            triProjected.p[3] = add(triProjected.p[3], Vec3d(1, 1, 0))
+            local offsetView = Vec3d(1, 1, 0)
+            triProjected.p[1] = vector_add(triProjected.p[1], offsetView)
+            triProjected.p[2] = vector_add(triProjected.p[2], offsetView)
+            triProjected.p[3] = vector_add(triProjected.p[3], offsetView)
 
             -- take coordinates out and scale (NEEDED)
             local triProjectedCoords = {}
@@ -114,7 +98,7 @@ function love.draw()
 
         -- make identical triangle but all black first to clear?
         drawTriangle('fill', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
-        drawTriangle('fill', coords, {1, 1, 1, triangle.shade}, nil, 1)
+        drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
     push:finish()
@@ -140,7 +124,3 @@ function updateMouse(dt)
     mouseX, mouseY = love.mouse.getPosition()
     mouseX, mouseY = push:toGame(mouseX, mouseY)
 end
-
--- DEBUGGING
-
--- print(v.x .. ", " .. v.y .. ", " .. v.z)
