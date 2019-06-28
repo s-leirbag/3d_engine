@@ -104,19 +104,44 @@ function loadFromObjFile(filename)
 	-- make sure file exists
 	assert(fileExists(filename), 'file does not exist')
 
+	local mesh = {}
 	local verts = {}
 	local fh = assert(io.open(filename, 'rb')) -- fh means file handle, an open file with a current position
 	
 	for line in fh:lines() do
-		print(line:sub(1, 1))
-		if line[1] == 'v' then
-			-- local v = Vec3d()
-			-- table.insert(verts, v)
-		elseif line[1] == 'f' then
+		if line:sub(1, 1) == 'v' then
+			local location = 2
+			local x = line:sub(line:find('[%d-.]+', location))
+			location = line:find('[%d-.]+', location)
+			location = line:find(' ', location) + 1
 
+			local y = line:sub(line:find('[%d-.]+', location))
+			location = line:find('[%d-.]+', location)
+			location = line:find(' ', location) + 1
+
+			local z = line:sub(line:find('[%d-.]+', location))
+
+			local v = Vec3d(x, y, z)
+			table.insert(verts, v)
+		elseif line:sub(1, 1) == 'f' then
+			local location = 2
+			local p1 = line:sub(line:find('[%d]+', location))
+			location = line:find('[%d]+', location)
+			location = line:find(' ', location) + 1
+
+			local p2 = line:sub(line:find('[%d]+', location))
+			location = line:find('[%d]+', location)
+			location = line:find(' ', location) + 1
+
+			local p3 = line:sub(line:find('[%d]+', location))
+
+			print(p1 .. ", " .. p2 .. ", " .. p3)
+
+			table.insert(mesh, Triangle({verts[p1 - 1], verts[p2 - 1], verts[p3 - 1]}))
 		end
 	end
 
+	return mesh
 end
 
 function fileExists(path)

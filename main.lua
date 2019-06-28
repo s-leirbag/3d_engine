@@ -16,7 +16,7 @@ function love.load()
     cam = Vec3d(0, 0, 0)
     light = Vec3d(0, 0, -1)
 
-    loadFromObjFile('VideoShip.obj')
+    ship = loadFromObjFile('VideoShip.obj')
 end
 
 function love.update(dt)
@@ -47,7 +47,7 @@ function love.draw()
     push:start()
 
     local trianglesToRender = {}
-    for k, tri in pairs(stack) do
+    for k, tri in pairs(ship) do
         local triRotatedZ = Triangle()
         local triRotatedZX = Triangle()
         local triTranslated = Triangle()
