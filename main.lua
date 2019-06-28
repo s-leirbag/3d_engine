@@ -25,9 +25,10 @@ function love.update(dt)
 
     matRotZ = matrix_makeRotationZ(theta)
     matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 8)
+    matTrans = matrix_makeTranslation(0, 0, 7)
 
-    matWorld = matrix_multiplyMatrix(matRotZ, matRotX)
+    matWorld = matrix_makeIdentity()
+    matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
     matWorld = matrix_multiplyMatrix(matWorld, matTrans)
 
     love.keyboard.keysPressed = {}
@@ -47,6 +48,10 @@ function love.draw()
         triTransformed.p[1] = matrix_multiplyVector(matWorld, tri.p[1])
         triTransformed.p[2] = matrix_multiplyVector(matWorld, tri.p[2])
         triTransformed.p[3] = matrix_multiplyVector(matWorld, tri.p[3])
+
+        -- triTransformed.p[1] = vector_add(triTransformed.p[1], Vec3d(0, 0, 8))
+        -- triTransformed.p[2] = vector_add(triTransformed.p[2], Vec3d(0, 0, 8))
+        -- triTransformed.p[3] = vector_add(triTransformed.p[3], Vec3d(0, 0, 8))
 
         -- draw if facing camera
         local unitNormal = vector_unit(vector_normal(triTransformed))
@@ -98,8 +103,10 @@ function love.draw()
 
         -- make identical triangle but all black first to clear?
         drawTriangle('fill', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
-        drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
+        drawTriangle('fill', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
+
+    displayFPS(10, 10)
 
     push:finish()
 end
@@ -123,4 +130,10 @@ end
 function updateMouse(dt)
     mouseX, mouseY = love.mouse.getPosition()
     mouseX, mouseY = push:toGame(mouseX, mouseY)
+end
+
+function displayFPS(x, y, color)
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(color or {0, 1, 0, 1})
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), x, y)
 end

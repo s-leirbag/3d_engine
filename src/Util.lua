@@ -12,7 +12,7 @@ function matrix_multiplyMatrix(a, b)
 	for r = 1, 4 do
 		matrix[r] = {}
 		for c = 1, 4 do
-			matrix[r][c] = a[r][1] * b[1][c] + a[r][2] * b[2][c] + a[r][3] * b[3][c] + a[r][4] * b[4][c]
+			matrix[r][c] = b[r][1] * a[1][c] + b[r][2] * a[2][c] + b[r][3] * a[3][c] + b[r][4] * a[4][c]
 		end
 	end
 	return matrix

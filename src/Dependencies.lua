@@ -8,3 +8,8 @@ require 'src/Util'
 require 'src/constants'
 require 'src/shapes'
 require 'src/StateMachine'
+
+smallFont = love.graphics.newFont('fonts/font.ttf', 8)
+largeFont = love.graphics.newFont('fonts/font.ttf', 16)
+scoreFont = love.graphics.newFont('fonts/font.ttf', 32)
+love.graphics.setFont(smallFont)
