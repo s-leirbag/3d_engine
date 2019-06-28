@@ -127,7 +127,9 @@ function drawTriangle(mode, triCoords, color, outlineColor, thickness)
 			love.graphics.setLineWidth(1)
 		end
 
-		drawLines(triCoords)
+		-- drawLines(triCoords)
+		love.graphics.setLineStyle('rough')
+		love.graphics.polygon('line', triCoords)
 	end
 end
 
