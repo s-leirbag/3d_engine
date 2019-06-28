@@ -22,10 +22,13 @@ function love.update(dt)
     updateMouse()
 
     theta = theta + dt * 50
+    if theta > 360 then
+        theta = theta - 360
+    end
 
-    matRotZ = matrix_makeRotationZ(theta)
+    matRotZ = matrix_makeRotationZ(theta * 0.5)
     matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 7)
+    matTrans = matrix_makeTranslation(0, 0, 8)
 
     matWorld = matrix_makeIdentity()
     matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
@@ -49,17 +52,13 @@ function love.draw()
         triTransformed.p[2] = matrix_multiplyVector(matWorld, tri.p[2])
         triTransformed.p[3] = matrix_multiplyVector(matWorld, tri.p[3])
 
-        -- triTransformed.p[1] = vector_add(triTransformed.p[1], Vec3d(0, 0, 8))
-        -- triTransformed.p[2] = vector_add(triTransformed.p[2], Vec3d(0, 0, 8))
-        -- triTransformed.p[3] = vector_add(triTransformed.p[3], Vec3d(0, 0, 8))
-
         -- draw if facing camera
         local unitNormal = vector_unit(vector_normal(triTransformed))
         local ray = vector_subtract(triTransformed.p[1], cam)
         if vector_dot(unitNormal, ray) < 0 then
             -- light
             local unitLight = vector_unit(light)
-            triProjected.shade = math.max(0.1, vector_dot(unitLight, unitNormal))
+            triProjected.shade = math.max(0.1, math.max(0.1, vector_dot(unitLight, unitNormal)))
 
             -- project from 3d to 2d (NEEDED)
             triProjected.p[1] = matrix_multiplyVector(matProj, triTransformed.p[1])
@@ -101,8 +100,7 @@ function love.draw()
             table.insert(coords, triangle.p[i].y)
         end
 
-        -- make identical triangle but all black first to clear?
-        drawTriangle('fill', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
+        love.graphics.setBlendMode('replace', 'alphamultiply')
         drawTriangle('fill', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
@@ -136,4 +134,6 @@ function displayFPS(x, y, color)
     love.graphics.setFont(smallFont)
     love.graphics.setColor(color or {0, 1, 0, 1})
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), x, y)
+    -- love.graphics.print('Time: ' .. tostring(love.timer.getTime()), x, y + 10)
+    -- love.graphics.print('BlendMode: ' .. tostring(love.graphics.getBlendMode()), x, y + 20)
 end
