@@ -64,9 +64,9 @@ function love.draw()
         triRotatedZX.p[3] = multiplyMatVect(triRotatedZ.p[3], matRotX)
 
         -- push away from camera (TEMPORARY)
-        triTranslated.p[1] = add(triRotatedZX.p[1], Vec3d(0, 0, 3))
-        triTranslated.p[2] = add(triRotatedZX.p[2], Vec3d(0, 0, 3))
-        triTranslated.p[3] = add(triRotatedZX.p[3], Vec3d(0, 0, 3))
+        triTranslated.p[1] = add(triRotatedZX.p[1], Vec3d(0, 0, 8))
+        triTranslated.p[2] = add(triRotatedZX.p[2], Vec3d(0, 0, 8))
+        triTranslated.p[3] = add(triRotatedZX.p[3], Vec3d(0, 0, 8))
 
         -- draw if facing camera
         local unitNormal = unit(normal(triTranslated))
@@ -113,8 +113,8 @@ function love.draw()
         end
 
         -- make identical triangle but all black first to clear?
-        drawTriangle('all', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
-        drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
+        drawTriangle('fill', coords, {0, 0, 0, 1}, {0, 0, 0, 1}, 1)
+        drawTriangle('fill', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
     push:finish()

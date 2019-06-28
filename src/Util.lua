@@ -125,19 +125,17 @@ function loadFromObjFile(filename)
 			table.insert(verts, v)
 		elseif line:sub(1, 1) == 'f' then
 			local location = 2
-			local p1 = line:sub(line:find('[%d]+', location))
+			local p1 = tonumber(line:sub(line:find('[%d]+', location)))
 			location = line:find('[%d]+', location)
 			location = line:find(' ', location) + 1
 
-			local p2 = line:sub(line:find('[%d]+', location))
+			local p2 = tonumber(line:sub(line:find('[%d]+', location)))
 			location = line:find('[%d]+', location)
 			location = line:find(' ', location) + 1
 
-			local p3 = line:sub(line:find('[%d]+', location))
+			local p3 = tonumber(line:sub(line:find('[%d]+', location)))
 
-			print(p1 .. ", " .. p2 .. ", " .. p3)
-
-			table.insert(mesh, Triangle({verts[p1 - 1], verts[p2 - 1], verts[p3 - 1]}))
+			table.insert(mesh, Triangle({verts[p1], verts[p2], verts[p3]}))
 		end
 	end
 
@@ -160,4 +158,3 @@ end
 -- DEBUGGING
 
 -- print(v.x .. ", " .. v.y .. ", " .. v.z)
--- print(w.x .. ", " .. w.y .. ", " .. w.z)
