@@ -127,18 +127,19 @@ function drawTriangle(mode, triCoords, color, outlineColor, thickness)
 			love.graphics.setLineWidth(1)
 		end
 
-		-- drawLines(triCoords)
 		love.graphics.setLineStyle('rough')
-		love.graphics.polygon('line', triCoords)
+		love.graphics.setLineJoin('none')
+		love.graphics.polygon('line', triCoords) -- alternative: drawLines(triCoords)
 	end
 end
 
-function drawLines(coords)
-    for i = 1, #coords / 2 - 1 do
-        love.graphics.line(coords[i * 2 - 1], coords[i * 2], coords[i * 2 + 1], coords[i * 2 + 2])
-    end
-    love.graphics.line(coords[#coords - 1], coords[#coords], coords[1], coords[2])
-end
+-- NOT USED
+-- function drawLines(coords)
+--     for i = 1, #coords / 2 - 1 do
+--         love.graphics.line(coords[i * 2 - 1], coords[i * 2], coords[i * 2 + 1], coords[i * 2 + 2])
+--     end
+--     love.graphics.line(coords[#coords - 1], coords[#coords], coords[1], coords[2])
+-- end
 
 function vector_add(v, w)
     return Vec3d(v.x + w.x, v.y + w.y, v.z + w.z)

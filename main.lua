@@ -28,7 +28,7 @@ function love.update(dt)
 
     matRotZ = matrix_makeRotationZ(theta * 0.5)
     matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 8)
+    matTrans = matrix_makeTranslation(0, 0, 7)
 
     matWorld = matrix_makeIdentity()
     matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
@@ -58,7 +58,7 @@ function love.draw()
         if vector_dot(unitNormal, ray) < 0 then
             -- light
             local unitLight = vector_unit(light)
-            triProjected.shade = math.max(0.1, math.max(0.1, vector_dot(unitLight, unitNormal)))
+            triProjected.shade = vector_dot(unitLight, unitNormal)
 
             -- project from 3d to 2d (NEEDED)
             triProjected.p[1] = matrix_multiplyVector(matProj, triTransformed.p[1])
@@ -101,10 +101,10 @@ function love.draw()
         end
 
         love.graphics.setBlendMode('replace', 'alphamultiply')
-        drawTriangle('fill', coords, {1, 1, 1, triangle.shade}, nil, 1)
+        drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
     end
 
-    displayFPS(10, 10)
+    displayInfo(10, 10)
 
     push:finish()
 end
@@ -130,10 +130,12 @@ function updateMouse(dt)
     mouseX, mouseY = push:toGame(mouseX, mouseY)
 end
 
-function displayFPS(x, y, color)
+function displayInfo(x, y, color)
     love.graphics.setFont(smallFont)
     love.graphics.setColor(color or {0, 1, 0, 1})
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), x, y)
-    -- love.graphics.print('Time: ' .. tostring(love.timer.getTime()), x, y + 10)
-    -- love.graphics.print('BlendMode: ' .. tostring(love.graphics.getBlendMode()), x, y + 20)
+    love.graphics.print('Time: ' .. tostring(love.timer.getTime()), x, y + 10)
+    love.graphics.print('BlendMode: ' .. tostring(love.graphics.getBlendMode()), x, y + 20)
+    love.graphics.print('LineStyle: ' .. tostring(love.graphics.getLineStyle()), x, y + 30)
+    love.graphics.print('LineJoin: ' .. tostring(love.graphics.getLineJoin()), x, y + 40)
 end
