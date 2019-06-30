@@ -29,11 +29,13 @@ function love.update(dt)
     if love.keyboard.isDown('lshift') then
         camera.y = camera.y + 8 * dt
     end
+
+    right = vector_scale(8 * dt, matrix_multiplyVector(matrix_makeRotationY(90), lookDir))
     if love.keyboard.isDown('a') then
-        camera.x = camera.x - 8 * dt
+        camera = vector_subtract(camera, right)
     end
     if love.keyboard.isDown('d') then
-        camera.x = camera.x + 8 * dt
+        camera = vector_add(camera, right)
     end
 
     forward = vector_scale(8 * dt, lookDir)
@@ -45,21 +47,23 @@ function love.update(dt)
     end
 
     if love.keyboard.isDown('left') then
-        yaw = yaw - 2 * dt
+        yaw = yaw - 50 * dt
     end
     if love.keyboard.isDown('right') then
-        yaw = yaw + 2 * dt
+        yaw = yaw + 50 * dt
     end
 
-    matRotZ = matrix_makeRotationZ(theta * 0.5)
-    matRotX = matrix_makeRotationX(theta)
+    -- matRotZ = matrix_makeRotationZ(theta * 0.5)
+    -- matRotX = matrix_makeRotationX(theta)
     matTrans = matrix_makeTranslation(0, 0, 15)
     matWorld = matrix_makeIdentity()
-    matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
+    -- matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
     matWorld = matrix_multiplyMatrix(matWorld, matTrans)
 
-    lookDir = Vec3d(0, 0, 1)
     up = Vec3d(0, 1, 0)
+    target = Vec3d(0, 0, 1)
+    matCameraRot = matrix_makeRotationY(yaw)
+    lookDir = matrix_multiplyVector(matCameraRot, target)
     target = vector_add(camera, lookDir)
     matCamera = matrix_pointAt(camera, target, up) -- target not needed? just use lookDir?
     matView = matrix_quickInverse(matCamera)

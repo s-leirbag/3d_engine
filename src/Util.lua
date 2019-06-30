@@ -74,18 +74,14 @@ function matrix_makeProjection(fov, aspectRatio, near, far)
 end
 
 function matrix_pointAt(pos, target, up)
-	print('--')
 	-- calculate new forward direction
 	local newForward = vector_unit(vector_subtract(target, pos)) --  literally just lookDir?
-	vector_print(newForward)
 
 	-- calculate new up direction
 	local newUp = vector_unit(vector_subtract(up, vector_scale(vector_dot(up, newForward), newForward))) -- scaling lookDir by its y component since up is Vec3d(0, 1, 0) then subtracting it from up and normalizing it?
-	vector_print(newUp)
 
 	-- calculate new right direction
 	local newRight = vector_cross(newUp, newForward)
-	vector_print(newRight)
 
 	return {
 		{newRight.x, newUp.x, newForward.x, pos.x},
