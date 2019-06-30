@@ -17,10 +17,39 @@ function love.load()
     camera = Vec3d(0, 0, 0)
     lookDir = Vec3d()
     light = Vec3d(0, 0, -1)
+    yaw = 0
 end
 
 function love.update(dt)
     updateMouse()
+
+    if love.keyboard.isDown('space') then
+        camera.y = camera.y - 8 * dt
+    end
+    if love.keyboard.isDown('lshift') then
+        camera.y = camera.y + 8 * dt
+    end
+    if love.keyboard.isDown('a') then
+        camera.x = camera.x - 8 * dt
+    end
+    if love.keyboard.isDown('d') then
+        camera.x = camera.x + 8 * dt
+    end
+
+    forward = vector_scale(8 * dt, lookDir)
+    if love.keyboard.isDown('w') then
+        camera = vector_add(camera, forward)
+    end
+    if love.keyboard.isDown('s') then
+        camera = vector_subtract(camera, forward)
+    end
+
+    if love.keyboard.isDown('left') then
+        yaw = yaw - 2 * dt
+    end
+    if love.keyboard.isDown('right') then
+        yaw = yaw + 2 * dt
+    end
 
     matRotZ = matrix_makeRotationZ(theta * 0.5)
     matRotX = matrix_makeRotationX(theta)
