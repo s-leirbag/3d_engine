@@ -14,25 +14,26 @@ function love.load()
 
     matProj = matrix_makeProjection(FOV, VIRTUAL_HEIGHT / VIRTUAL_WIDTH, 0.1, 1000)
     theta = 0
-    cam = Vec3d(0, 0, 0)
+    camera = Vec3d(0, 0, 0)
+    lookDir = Vec3d()
     light = Vec3d(0, 0, -1)
 end
 
 function love.update(dt)
     updateMouse()
 
-    theta = theta + dt * 50
-    if theta > 360 then
-        theta = theta - 360
-    end
-
     matRotZ = matrix_makeRotationZ(theta * 0.5)
     matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 7)
-
+    matTrans = matrix_makeTranslation(0, 0, 15)
     matWorld = matrix_makeIdentity()
     matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
     matWorld = matrix_multiplyMatrix(matWorld, matTrans)
+
+    lookDir = Vec3d(0, 0, 1)
+    up = Vec3d(0, 1, 0)
+    target = vector_add(camera, lookDir)
+    matCamera = matrix_pointAt(camera, target, up) -- target not needed? just use lookDir?
+    matView = matrix_quickInverse(matCamera)
 
     love.keyboard.keysPressed = {}
 
@@ -43,8 +44,9 @@ function love.draw()
     push:start()
 
     local trianglesToRender = {}
-    for k, tri in pairs(ship) do
+    for k, tri in pairs(axis) do
         local triTransformed = Triangle()
+        local triViewed = Triangle()
         local triProjected = Triangle()
 
         -- transform
@@ -54,16 +56,21 @@ function love.draw()
 
         -- draw if facing camera
         local unitNormal = vector_unit(vector_normal(triTransformed))
-        local ray = vector_subtract(triTransformed.p[1], cam)
+        local ray = vector_subtract(triTransformed.p[1], camera)
         if vector_dot(unitNormal, ray) < 0 then
             -- light
             local unitLight = vector_unit(light)
             triProjected.shade = vector_dot(unitLight, unitNormal)
 
+            -- transform to view space
+            triViewed.p[1] = matrix_multiplyVector(matView, triTransformed.p[1])
+            triViewed.p[2] = matrix_multiplyVector(matView, triTransformed.p[2])
+            triViewed.p[3] = matrix_multiplyVector(matView, triTransformed.p[3])
+
             -- project from 3d to 2d (NEEDED)
-            triProjected.p[1] = matrix_multiplyVector(matProj, triTransformed.p[1])
-            triProjected.p[2] = matrix_multiplyVector(matProj, triTransformed.p[2])
-            triProjected.p[3] = matrix_multiplyVector(matProj, triTransformed.p[3])
+            triProjected.p[1] = matrix_multiplyVector(matProj, triViewed.p[1])
+            triProjected.p[2] = matrix_multiplyVector(matProj, triViewed.p[2])
+            triProjected.p[3] = matrix_multiplyVector(matProj, triViewed.p[3])
             triProjected.p[1] = vector_scale(1 / triProjected.p[1].w, triProjected.p[1])
             triProjected.p[2] = vector_scale(1 / triProjected.p[2].w, triProjected.p[2])
             triProjected.p[3] = vector_scale(1 / triProjected.p[3].w, triProjected.p[3])

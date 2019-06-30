@@ -1,5 +1,6 @@
 ship = loadFromObjFile('ship.obj')
 teapot = loadFromObjFile('teapot.obj')
+axis = loadFromObjFile('axis.obj')
 
 cube = {
 	-- SOUTH

@@ -73,6 +73,38 @@ function matrix_makeProjection(fov, aspectRatio, near, far)
 	}
 end
 
+function matrix_pointAt(pos, target, up)
+	print('--')
+	-- calculate new forward direction
+	local newForward = vector_unit(vector_subtract(target, pos)) --  literally just lookDir?
+	vector_print(newForward)
+
+	-- calculate new up direction
+	local newUp = vector_unit(vector_subtract(up, vector_scale(vector_dot(up, newForward), newForward))) -- scaling lookDir by its y component since up is Vec3d(0, 1, 0) then subtracting it from up and normalizing it?
+	vector_print(newUp)
+
+	-- calculate new right direction
+	local newRight = vector_cross(newUp, newForward)
+	vector_print(newRight)
+
+	return {
+		{newRight.x, newUp.x, newForward.x, pos.x},
+		{newRight.y, newUp.y, newForward.y, pos.y},
+		{newRight.z, newUp.z, newForward.z, pos.z},
+		{0, 0, 0, 1}
+	}
+end
+
+-- only works for rotation/translation matrices
+function matrix_quickInverse(m)
+	return {
+		{m[1][1], m[2][1], m[3][1], -vector_dot(Vec3d(m[1][4], m[2][4], m[3][4]), Vec3d(m[1][1], m[2][1], m[3][1]))},		--	-(m[1][4] * m[1][1] + m[2][4] * m[2][1] + m[3][4] * m[3][1])},
+		{m[1][2], m[2][2], m[3][2], -vector_dot(Vec3d(m[1][4], m[2][4], m[3][4]), Vec3d(m[1][2], m[2][2], m[3][2]))},		--	-(m[1][4] * m[1][2] + m[2][4] * m[2][2] + m[3][4] * m[3][2])},
+		{m[1][3], m[2][3], m[3][3], -vector_dot(Vec3d(m[1][4], m[2][4], m[3][4]), Vec3d(m[1][3], m[2][3], m[3][3]))},		--	-(m[1][4] * m[1][3] + m[2][4] * m[2][3] + m[3][4] * m[3][3])},
+		{0, 0, 0, 1}
+	}
+end
+
 function matrix_print(m)
 	print('matrix = {')
 	for r = 1, #m - 1 do
