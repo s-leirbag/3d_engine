@@ -16,7 +16,7 @@ function love.load()
     theta = 0
     camera = Vec3d(0, 0, 0)
     lookDir = Vec3d()
-    light = Vec3d(0.25, -0.75, -1)
+    light = Vec3d(0, -1, -1)
     yaw = 0
 end
 
@@ -80,7 +80,6 @@ function love.draw()
     for k, tri in pairs(axis) do
         local triTransformed = Triangle()
         local triViewed = Triangle()
-        local triProjected = Triangle()
 
         -- transform
         triTransformed.p[1] = matrix_multiplyVector(matWorld, tri.p[1])
@@ -102,9 +101,10 @@ function love.draw()
             triViewed.color = triTransformed.color
 
             -- clip triangle
-            clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 1), Vec3d(0, 0, 1), triViewed)
+            clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 0.1), Vec3d(0, 0, 1), triViewed)
 
             for k, triClipped in pairs(clippedTriangles) do
+                local triProjected = Triangle()
                 triProjected.color = triClipped.color
                 -- project from 3d to 2d (NEEDED)
                 triProjected.p[1] = matrix_multiplyVector(matProj, triClipped.p[1])
@@ -181,8 +181,8 @@ function displayInfo(x, y, color)
     love.graphics.setFont(smallFont)
     love.graphics.setColor(color or {0, 1, 0, 1})
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), x, y)
-    love.graphics.print('Time: ' .. tostring(love.timer.getTime()), x, y + 10)
-    love.graphics.print('BlendMode: ' .. tostring(love.graphics.getBlendMode()), x, y + 20)
-    love.graphics.print('LineStyle: ' .. tostring(love.graphics.getLineStyle()), x, y + 30)
-    love.graphics.print('LineJoin: ' .. tostring(love.graphics.getLineJoin()), x, y + 40)
+    -- love.graphics.print('Time: ' .. tostring(love.timer.getTime()), x, y + 10)
+    -- love.graphics.print('BlendMode: ' .. tostring(love.graphics.getBlendMode()), x, y + 20)
+    -- love.graphics.print('LineStyle: ' .. tostring(love.graphics.getLineStyle()), x, y + 30)
+    -- love.graphics.print('LineJoin: ' .. tostring(love.graphics.getLineJoin()), x, y + 40)
 end
