@@ -260,7 +260,6 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 		return {tri}
 	elseif #inside_points == 1 then
 		local triClipped = Triangle()
-		triClipped.color = {1, 0, 0}
 		triClipped.color[4] = tri.color[4]
 
 		triClipped.p[1] = inside_points[1]
@@ -268,13 +267,11 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 		triClipped.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[2])
 
 		return {triClipped}
-	-- #inside_points == 2
+	-- #inside_points is 2
 	else
 		local triClipped1 = Triangle()
 		local triClipped2 = Triangle()
-		triClipped1.color = {0, 1, 0}
 		triClipped1.color[4] = tri.color[4]
-		triClipped2.color = {0, 0, 1}
 		triClipped2.color[4] = tri.color[4]
 
 		triClipped1.p[1] = inside_points[1]

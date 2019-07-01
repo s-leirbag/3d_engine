@@ -16,7 +16,7 @@ function love.load()
     theta = 0
     camera = Vec3d(0, 0, 0)
     lookDir = Vec3d()
-    light = Vec3d(0, -1, -1)
+    light = Vec3d(0, 1, -1)
     yaw = 0
 end
 
@@ -77,30 +77,30 @@ function love.draw()
     push:start()
 
     local trianglesToRender = {}
-    for k, tri in pairs(axis) do
+    for k, tri in pairs(mountains) do
         local triTransformed = Triangle()
         local triViewed = Triangle()
 
-        -- transform
+        -- transform (NEEDED)
         triTransformed.p[1] = matrix_multiplyVector(matWorld, tri.p[1])
         triTransformed.p[2] = matrix_multiplyVector(matWorld, tri.p[2])
         triTransformed.p[3] = matrix_multiplyVector(matWorld, tri.p[3])
 
-        -- draw if facing camera
+        -- draw if facing camera (NEEDED)
         local unitNormal = vector_unit(vector_normal(triTransformed))
         local ray = vector_subtract(triTransformed.p[1], camera)
         if vector_dot(unitNormal, ray) < 0 then
-            -- light
+            -- light (may be changed later)
             local unitLight = vector_unit(light)
             triTransformed.color[4] = vector_dot(unitLight, unitNormal)
 
-            -- transform to view space
+            -- transform to view space (NEEDED)
             triViewed.p[1] = matrix_multiplyVector(matView, triTransformed.p[1])
             triViewed.p[2] = matrix_multiplyVector(matView, triTransformed.p[2])
             triViewed.p[3] = matrix_multiplyVector(matView, triTransformed.p[3])
             triViewed.color = triTransformed.color
 
-            -- clip triangle
+            -- clip triangle against Znear plane (NEEDED)
             clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 0.1), Vec3d(0, 0, 1), triViewed)
 
             for k, triClipped in pairs(clippedTriangles) do
@@ -139,16 +139,53 @@ function love.draw()
         return aCenterZ > bCenterZ
     end)
 
-    -- draw triangles (NEEDED)
-    for k, triangle in ipairs(trianglesToRender) do
-        local coords = {}
-        for i = 1, 3 do
-            table.insert(coords, triangle.p[i].x)
-            table.insert(coords, triangle.p[i].y)
+    -- clip triangles against the 4 planes of the viewing frustum (NEEDED)
+    love.graphics.setBlendMode('replace', 'alphamultiply')
+    for k, triToRender in ipairs(trianglesToRender) do
+        local triangles = {}
+        table.insert(triangles, triToRender)
+        local numNewTriangles = 0
+
+        for s = 1, 4 do
+            while numNewTriangles > 0 do
+                -- take triangle from front of queue
+                local test = triangles[1]
+                table.remove(triangles, 1)
+                numNewTriangles = numNewTriangles - 1
+
+                -- clip against screen planes
+                local clippedTriangles
+                if s == 1 then
+                    -- top
+                    clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 0), Vec3d(0, 1, 0), test)
+                elseif s == 2 then
+                    -- bottom
+                    clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, VIRTUAL_HEIGHT, 0), Vec3d(0, -1, 0), test) -- do VIRTUAL_HEIGHT - 1 instead?
+                elseif s == 3 then
+                    --left
+                    clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 0), Vec3d(1, 0, 0), test)
+                -- s is 4
+                else
+                    -- right
+                    clippedTriangles = triangle_clipAgainstPlane(Vec3d(VIRTUAL_WIDTH, 0, 0), Vec3d(-1, 0, 0), test)
+                end
+
+                for n, triClipped in pairs(clippedTriangles) do
+                    table.insert(triangles, triClipped)
+                end
+            end
+            numNewTriangles = #triangles
         end
 
-        love.graphics.setBlendMode('replace', 'alphamultiply')
-        drawTriangle('all', coords, triangle.color, nil, 1)
+        -- render triangles (NEEDED)
+        for i, tri in pairs(triangles) do
+            local coords = {}
+            for p = 1, 3 do
+                table.insert(coords, tri.p[p].x)
+                table.insert(coords, tri.p[p].y)
+            end
+            drawTriangle('fill', coords, tri.color, nil, 1)
+        end
     end
 
     displayInfo(10, 10)
