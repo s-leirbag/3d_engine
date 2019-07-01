@@ -217,6 +217,78 @@ function vector_print(v)
 	end
 end
 
+function vector_intersectPlane(plane_point, plane_normal, lineStart, lineEnd)
+	plane_normal = vector_unit(plane_normal)
+	plane_dot = -vector_dot(plane_normal, plane_point)
+	ad = vector_dot(lineStart, plane_normal)
+	bd = vector_dot(lineEnd, plane_normal)
+	t = (-plane_dot - ad) / (bd - ad)
+	lineStartToEnd = vector_subtract(lineEnd, lineStart)
+	lineToIntersect = vector_scale(t, lineStartToEnd)
+	return vector_add(lineStart, lineToIntersect)
+end
+
+-- uses signed distance between point and plane
+-- to classify triangle's points as inside or outside
+-- (normal must be facing inside)
+-- then return table of clipped triangles
+function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
+	plane_normal = vector_unit(plane_normal) -- make sure plane normal is normal
+
+	dist = function(point)
+		normal = vector_unit(point)
+		-- find component of point and plane_point lying on plane_normal, then subtract them to get the dist
+		return vector_dot(plane_normal, point) - vector_dot(plane_normal, plane_point)
+	end
+
+	local inside_points = {}
+	local outside_points = {}
+	local numInsidePoints = 0 -- may be useless
+	local numOutsidePoints = 0
+
+	local d1 = dist(tri.p[1])
+	local d2 = dist(tri.p[2])
+	local d3 = dist(tri.p[3])
+
+	if d1 >= 0 then table.insert(inside_points, tri.p[1]) else table.insert(outside_points, tri.p[1]) end
+	if d2 >= 0 then table.insert(inside_points, tri.p[2]) else table.insert(outside_points, tri.p[2]) end
+	if d3 >= 0 then table.insert(inside_points, tri.p[3]) else table.insert(outside_points, tri.p[3]) end
+
+	if #inside_points == 0 then
+		return {}
+	elseif #inside_points == 3 then
+		return {tri}
+	elseif #inside_points == 1 then
+		local triClipped = Triangle()
+		triClipped.color = {1, 0, 0}
+		triClipped.color[4] = tri.color[4]
+
+		triClipped.p[1] = inside_points[1]
+		triClipped.p[2] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[1])
+		triClipped.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[2])
+
+		return {triClipped}
+	-- #inside_points == 2
+	else
+		local triClipped1 = Triangle()
+		local triClipped2 = Triangle()
+		triClipped1.color = {0, 1, 0}
+		triClipped1.color[4] = tri.color[4]
+		triClipped2.color = {0, 0, 1}
+		triClipped2.color[4] = tri.color[4]
+
+		triClipped1.p[1] = inside_points[1]
+		triClipped1.p[2] = inside_points[2]
+		triClipped1.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[1])
+
+		triClipped2.p[1] = inside_points[2]
+		triClipped2.p[2] = triClipped1.p[3] -- ?? is this counter clockwise???
+		triClipped2.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[2], outside_points[1])
+
+		return {triClipped1, triClipped2}
+	end
+end
+
 function loadFromObjFile(filename)
 	filename = 'src/obj_files/' .. filename
 

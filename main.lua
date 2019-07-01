@@ -16,7 +16,7 @@ function love.load()
     theta = 0
     camera = Vec3d(0, 0, 0)
     lookDir = Vec3d()
-    light = Vec3d(0, 0, -1)
+    light = Vec3d(0.25, -0.75, -1)
     yaw = 0
 end
 
@@ -93,34 +93,41 @@ function love.draw()
         if vector_dot(unitNormal, ray) < 0 then
             -- light
             local unitLight = vector_unit(light)
-            triProjected.shade = vector_dot(unitLight, unitNormal)
+            triTransformed.color[4] = vector_dot(unitLight, unitNormal)
 
             -- transform to view space
             triViewed.p[1] = matrix_multiplyVector(matView, triTransformed.p[1])
             triViewed.p[2] = matrix_multiplyVector(matView, triTransformed.p[2])
             triViewed.p[3] = matrix_multiplyVector(matView, triTransformed.p[3])
+            triViewed.color = triTransformed.color
 
-            -- project from 3d to 2d (NEEDED)
-            triProjected.p[1] = matrix_multiplyVector(matProj, triViewed.p[1])
-            triProjected.p[2] = matrix_multiplyVector(matProj, triViewed.p[2])
-            triProjected.p[3] = matrix_multiplyVector(matProj, triViewed.p[3])
-            triProjected.p[1] = vector_scale(1 / triProjected.p[1].w, triProjected.p[1])
-            triProjected.p[2] = vector_scale(1 / triProjected.p[2].w, triProjected.p[2])
-            triProjected.p[3] = vector_scale(1 / triProjected.p[3].w, triProjected.p[3])
+            -- clip triangle
+            clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 1), Vec3d(0, 0, 1), triViewed)
 
-            -- shift from -1, 1 to 0, 2 (NEEDED)
-            local offsetView = Vec3d(1, 1, 0)
-            triProjected.p[1] = vector_add(triProjected.p[1], offsetView)
-            triProjected.p[2] = vector_add(triProjected.p[2], offsetView)
-            triProjected.p[3] = vector_add(triProjected.p[3], offsetView)
+            for k, triClipped in pairs(clippedTriangles) do
+                triProjected.color = triClipped.color
+                -- project from 3d to 2d (NEEDED)
+                triProjected.p[1] = matrix_multiplyVector(matProj, triClipped.p[1])
+                triProjected.p[2] = matrix_multiplyVector(matProj, triClipped.p[2])
+                triProjected.p[3] = matrix_multiplyVector(matProj, triClipped.p[3])
+                triProjected.p[1] = vector_scale(1 / triProjected.p[1].w, triProjected.p[1])
+                triProjected.p[2] = vector_scale(1 / triProjected.p[2].w, triProjected.p[2])
+                triProjected.p[3] = vector_scale(1 / triProjected.p[3].w, triProjected.p[3])
 
-            -- take coordinates out and scale (NEEDED)
-            local triProjectedCoords = {}
-            for i = 1, 3 do
-                triProjected.p[i].x = triProjected.p[i].x / 2 * VIRTUAL_WIDTH
-                triProjected.p[i].y = triProjected.p[i].y / 2 * VIRTUAL_HEIGHT
+                -- shift from -1, 1 to 0, 2 (NEEDED)
+                local offsetView = Vec3d(1, 1, 0)
+                triProjected.p[1] = vector_add(triProjected.p[1], offsetView)
+                triProjected.p[2] = vector_add(triProjected.p[2], offsetView)
+                triProjected.p[3] = vector_add(triProjected.p[3], offsetView)
+
+                -- take coordinates out and scale (NEEDED)
+                local triProjectedCoords = {}
+                for i = 1, 3 do
+                    triProjected.p[i].x = triProjected.p[i].x / 2 * VIRTUAL_WIDTH
+                    triProjected.p[i].y = triProjected.p[i].y / 2 * VIRTUAL_HEIGHT
+                end
+                table.insert(trianglesToRender, triProjected)
             end
-            table.insert(trianglesToRender, triProjected)
         end 
     end
 
@@ -141,7 +148,7 @@ function love.draw()
         end
 
         love.graphics.setBlendMode('replace', 'alphamultiply')
-        drawTriangle('all', coords, {1, 1, 1, triangle.shade}, nil, 1)
+        drawTriangle('all', coords, triangle.color, nil, 1)
     end
 
     displayInfo(10, 10)
