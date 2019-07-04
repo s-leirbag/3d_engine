@@ -219,13 +219,13 @@ end
 
 function vector_intersectPlane(plane_point, plane_normal, lineStart, lineEnd)
 	plane_normal = vector_unit(plane_normal)
-	plane_dot = -vector_dot(plane_normal, plane_point)
-	ad = vector_dot(lineStart, plane_normal)
-	bd = vector_dot(lineEnd, plane_normal)
-	t = (-plane_dot - ad) / (bd - ad)
-	lineStartToEnd = vector_subtract(lineEnd, lineStart)
-	lineToIntersect = vector_scale(t, lineStartToEnd)
-	return vector_add(lineStart, lineToIntersect)
+	local plane_dot = -vector_dot(plane_normal, plane_point)
+	local ad = vector_dot(lineStart, plane_normal)
+	local bd = vector_dot(lineEnd, plane_normal)
+	local t = (-plane_dot - ad) / (bd - ad)
+	local lineStartToEnd = vector_subtract(lineEnd, lineStart)
+	local lineToIntersect = vector_scale(t, lineStartToEnd)
+	return vector_add(lineStart, lineToIntersect), t
 end
 
 -- uses signed distance between point and plane
@@ -243,16 +243,16 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 
 	local inside_points = {}
 	local outside_points = {}
-	local numInsidePoints = 0 -- may be useless
-	local numOutsidePoints = 0
+	local inside_tex = {}
+	local outside_tex = {}
 
 	local d1 = dist(tri.p[1])
 	local d2 = dist(tri.p[2])
 	local d3 = dist(tri.p[3])
 
-	if d1 >= 0 then table.insert(inside_points, tri.p[1]) else table.insert(outside_points, tri.p[1]) end
-	if d2 >= 0 then table.insert(inside_points, tri.p[2]) else table.insert(outside_points, tri.p[2]) end
-	if d3 >= 0 then table.insert(inside_points, tri.p[3]) else table.insert(outside_points, tri.p[3]) end
+	if d1 >= 0 then table.insert(inside_points, tri.p[1]); table.insert(inside_tex, tri.t[1]) else table.insert(outside_points, tri.p[1]); table.insert(outside_tex, tri.t[1]) end
+	if d2 >= 0 then table.insert(inside_points, tri.p[2]); table.insert(inside_tex, tri.t[2]) else table.insert(outside_points, tri.p[2]); table.insert(outside_tex, tri.t[2]) end
+	if d3 >= 0 then table.insert(inside_points, tri.p[3]); table.insert(inside_tex, tri.t[3]) else table.insert(outside_points, tri.p[3]); table.insert(outside_tex, tri.t[3]) end
 
 	if #inside_points == 0 then
 		return {}
@@ -262,9 +262,19 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 		local triClipped = Triangle()
 		triClipped.color[4] = tri.color[4]
 
+		local t = 0
 		triClipped.p[1] = inside_points[1]
-		triClipped.p[2] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[1])
-		triClipped.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[2])
+		triClipped.t[1] = inside_tex[1]
+
+		triClipped.p[2], t = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[1])
+		triClipped.t[2].u = inside_tex[1].u * (1 - t) + outside_tex[1].u * t
+		triClipped.t[2].v = inside_tex[1].v * (1 - t) + outside_tex[1].v * t
+		triClipped.t[2].w = inside_tex[1].w * (1 - t) + outside_tex[1].w * t
+
+		triClipped.p[3], t = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[2])
+		triClipped.t[3].u = inside_tex[1].u * (1 - t) + outside_tex[2].u * t
+		triClipped.t[3].v = inside_tex[1].v * (1 - t) + outside_tex[2].v * t
+		triClipped.t[3].w = inside_tex[1].w * (1 - t) + outside_tex[2].w * t
 
 		return {triClipped}
 	-- #inside_points is 2
@@ -274,13 +284,28 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 		triClipped1.color[4] = tri.color[4]
 		triClipped2.color[4] = tri.color[4]
 
+		local t = 0
 		triClipped1.p[1] = inside_points[1]
+		triClipped1.t[1] = inside_tex[1]
+
 		triClipped1.p[2] = inside_points[2]
+		triClipped1.t[2] = inside_tex[2]
+
 		triClipped1.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[1], outside_points[1])
+		triClipped1.t[3].u = inside_tex[1].u * (1 - t) + outside_tex[1].u * t
+		triClipped1.t[3].v = inside_tex[1].v * (1 - t) + outside_tex[1].v * t
+		triClipped1.t[3].w = inside_tex[1].w * (1 - t) + outside_tex[1].w * t
 
 		triClipped2.p[1] = inside_points[2]
-		triClipped2.p[2] = triClipped1.p[3] -- ?? is this counter clockwise???
+		triClipped2.t[1] = inside_tex[2]
+
+		triClipped2.p[2] = triClipped1.p[3] -- ?? is this counter clockwise??? don't think it matters tho
+		triClipped2.t[2] = triClipped1.t[3]
+
 		triClipped2.p[3] = vector_intersectPlane(plane_point, plane_normal, inside_points[2], outside_points[1])
+		triClipped2.t[3].u = inside_tex[2].u * (1 - t) + outside_tex[1].u * t
+		triClipped2.t[3].v = inside_tex[2].v * (1 - t) + outside_tex[1].v * t
+		triClipped2.t[3].w = inside_tex[2].w * (1 - t) + outside_tex[1].w * t
 
 		return {triClipped1, triClipped2}
 	end

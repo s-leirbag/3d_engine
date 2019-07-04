@@ -14,10 +14,12 @@ function love.load()
 
     matProj = matrix_makeProjection(FOV, VIRTUAL_HEIGHT / VIRTUAL_WIDTH, 0.1, 1000)
     theta = 0
-    camera = Vec3d(0, 0, 0)
+    camera = Vec3d(0, 0, -1)
     lookDir = Vec3d()
-    light = Vec3d(0, 1, -1)
+    light = Vec3d(0.5, -1, -0.75)
     yaw = 0
+
+    mesh = cube
 end
 
 function love.update(dt)
@@ -55,7 +57,7 @@ function love.update(dt)
 
     -- matRotZ = matrix_makeRotationZ(theta * 0.5)
     -- matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 15)
+    matTrans = matrix_makeTranslation(0, 0, 5)
     matWorld = matrix_makeIdentity()
     -- matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
     matWorld = matrix_multiplyMatrix(matWorld, matTrans)
@@ -77,7 +79,7 @@ function love.draw()
     push:start()
 
     local trianglesToRender = {}
-    for k, tri in pairs(mountains) do
+    for k, tri in pairs(mesh) do
         local triTransformed = Triangle()
         local triViewed = Triangle()
 
@@ -85,6 +87,9 @@ function love.draw()
         triTransformed.p[1] = matrix_multiplyVector(matWorld, tri.p[1])
         triTransformed.p[2] = matrix_multiplyVector(matWorld, tri.p[2])
         triTransformed.p[3] = matrix_multiplyVector(matWorld, tri.p[3])
+        triTransformed.t[1] = tri.t[1]
+        triTransformed.t[2] = tri.t[2]
+        triTransformed.t[3] = tri.t[3]
 
         -- draw if facing camera (NEEDED)
         local unitNormal = vector_unit(vector_normal(triTransformed))
@@ -99,6 +104,9 @@ function love.draw()
             triViewed.p[2] = matrix_multiplyVector(matView, triTransformed.p[2])
             triViewed.p[3] = matrix_multiplyVector(matView, triTransformed.p[3])
             triViewed.color = triTransformed.color
+            triViewed.t[1] = triTransformed.t[1]
+            triViewed.t[2] = triTransformed.t[2]
+            triViewed.t[3] = triTransformed.t[3]
 
             -- clip triangle against Znear plane (NEEDED)
             clippedTriangles = triangle_clipAgainstPlane(Vec3d(0, 0, 0.1), Vec3d(0, 0, 1), triViewed)
@@ -113,6 +121,10 @@ function love.draw()
                 triProjected.p[1] = vector_scale(1 / triProjected.p[1].w, triProjected.p[1])
                 triProjected.p[2] = vector_scale(1 / triProjected.p[2].w, triProjected.p[2])
                 triProjected.p[3] = vector_scale(1 / triProjected.p[3].w, triProjected.p[3])
+
+                triProjected.t[1] = triClipped.t[1]
+                triProjected.t[2] = triClipped.t[2]
+                triProjected.t[3] = triClipped.t[3]
 
                 -- shift from -1, 1 to 0, 2 (NEEDED)
                 local offsetView = Vec3d(1, 1, 0)
@@ -140,7 +152,6 @@ function love.draw()
     end)
 
     -- clip triangles against the 4 planes of the viewing frustum (NEEDED)
-    love.graphics.setBlendMode('replace', 'alphamultiply')
     for k, triToRender in ipairs(trianglesToRender) do
         local triangles = {}
         table.insert(triangles, triToRender)
@@ -178,13 +189,15 @@ function love.draw()
         end
 
         -- render triangles (NEEDED)
+        love.graphics.setBlendMode('replace', 'alphamultiply')
+        love.graphics.setPointSize(1)
         for i, tri in pairs(triangles) do
             local coords = {}
             for p = 1, 3 do
                 table.insert(coords, tri.p[p].x)
                 table.insert(coords, tri.p[p].y)
             end
-            drawTriangle('fill', coords, tri.color, nil, 1)
+            drawTriangle('line', coords, tri.color, nil, 1)
         end
     end
 
