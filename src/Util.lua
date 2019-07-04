@@ -311,6 +311,34 @@ function triangle_clipAgainstPlane(plane_point, plane_normal, tri)
 	end
 end
 
+function texturedTriangle(x1, y1, u1, v1,
+	x2, y2, u2, v2,
+	x3, y3, u3, v3,
+	x4, y4, u4, v4,
+	tex)
+
+	if y2 < y1 then
+		swap(y1, y2)
+		swap(x1, x2)
+		swap(u1, u2)
+		swap(v1, v2)
+	end
+	if y3 < y1 then
+		swap(y1, y3)
+		swap(x1, x3)
+		swap(u1, u3)
+		swap(v1, v3)
+	end
+	if y3 < y2 then
+		swap(y2, y3)
+		swap(x2, x3)
+		swap(u2, u3)
+		swap(v2, v3)
+	end
+
+	
+end
+
 function loadFromObjFile(filename)
 	filename = 'src/obj_files/' .. filename
 
@@ -366,6 +394,14 @@ function readall(filename)
   local contents = assert(fh:read("a")) -- "a" in Lua 5.3; "*a" in Lua 5.1 and 5.2
   fh:close()
   return contents
+end
+
+function swap(a, b)
+	local buffer = a
+	a = b
+	b = buffer
+
+	return a, b
 end
 
 -- DEBUGGING
