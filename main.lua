@@ -57,7 +57,7 @@ function love.update(dt)
 
     -- matRotZ = matrix_makeRotationZ(theta * 0.5)
     -- matRotX = matrix_makeRotationX(theta)
-    matTrans = matrix_makeTranslation(0, 0, 5)
+    matTrans = matrix_makeTranslation(0, 0, 2)
     matWorld = matrix_makeIdentity()
     -- matWorld = matrix_multiplyMatrix(matRotX, matRotZ)
     matWorld = matrix_multiplyMatrix(matWorld, matTrans)
@@ -192,12 +192,12 @@ function love.draw()
         love.graphics.setBlendMode('replace', 'alphamultiply')
         love.graphics.setPointSize(1)
         for i, tri in pairs(triangles) do
-            local coords = {}
-            for p = 1, 3 do
-                table.insert(coords, tri.p[p].x)
-                table.insert(coords, tri.p[p].y)
-            end
-            drawTriangle('line', coords, tri.color, nil, 1)
+            texturedTriangle(tri.p[1].x, tri.p[1].y, tri.t[1].u, tri.t[1].v,
+                             tri.p[2].x, tri.p[2].y, tri.t[2].u, tri.t[2].v,
+                             tri.p[3].x, tri.p[3].y, tri.t[3].u, tri.t[3].v,
+                             'bookshelf.png')
+
+            drawTriangle('line', {tri.p[1].x, tri.p[1].y, tri.p[2].x, tri.p[2].y, tri.p[3].x, tri.p[3].y}, tri.color, nil, 1)
         end
     end
 

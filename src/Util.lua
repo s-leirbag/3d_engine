@@ -314,33 +314,142 @@ end
 function texturedTriangle(x1, y1, u1, v1,
 	x2, y2, u2, v2,
 	x3, y3, u3, v3,
-	x4, y4, u4, v4,
-	tex)
+	texFilename)
+
+	texFilename = 'src/models/textures/' .. texFilename
+	-- make sure file exists
+	assert(fileExists(texFilename), 'file does not exist')
+
+	local texData = love.image.newImageData(texFilename)
+	love.graphics.setPointSize(1)
 
 	if y2 < y1 then
-		swap(y1, y2)
-		swap(x1, x2)
-		swap(u1, u2)
-		swap(v1, v2)
+		y1, y2 = swap(y1, y2)
+		x1, x2 = swap(x1, x2)
+		u1, u2 = swap(u1, u2)
+		v1, v2 = swap(v1, v2)
 	end
 	if y3 < y1 then
-		swap(y1, y3)
-		swap(x1, x3)
-		swap(u1, u3)
-		swap(v1, v3)
+		y1, y3 = swap(y1, y3)
+		x1, x3 = swap(x1, x3)
+		u1, u3 = swap(u1, u3)
+		v1, v3 = swap(v1, v3)
 	end
 	if y3 < y2 then
-		swap(y2, y3)
-		swap(x2, x3)
-		swap(u2, u3)
-		swap(v2, v3)
+		y2, y3 = swap(y2, y3)
+		x2, x3 = swap(x2, x3)
+		u2, u3 = swap(u2, u3)
+		v2, v3 = swap(v2, v3)
 	end
 
-	
+	local dy1 = math.floor(y2 - y1)
+	local dx1 = math.floor(x2 - x1)
+	local dv1 = math.floor(v2 - v1)
+	local du1 = math.floor(u2 - u1)
+
+	local dy2 = math.floor(y3 - y1)
+	local dx2 = math.floor(x3 - x1)
+	local dv2 = math.floor(v3 - v1)
+	local du2 = math.floor(u3 - u1)
+
+	local aStepX, bStepX
+	local stepU1, stepV1
+	local stepU2, stepV2
+
+	if dy1 ~= 0 then aStepX = dx1 / math.abs(dy1) end
+	if dy2 ~= 0 then bStepX = dx2 / math.abs(dy2) end
+
+	if dy1 ~= 0 then stepU1 = du1 / math.abs(dy1) end
+	if dy1 ~= 0 then stepV1 = dv1 / math.abs(dy1) end
+
+	if dy2 ~= 0 then stepU2 = du2 / math.abs(dy2) end
+	if dy2 ~= 0 then stepV2 = dv2 / math.abs(dy2) end
+
+	if dy1 ~= 0 then
+		for y = y1, y2 do
+			local ax = x1 + (y - y1) * aStepX
+			local bx = x1 + (y - y1) * bStepX
+			local texStartU = u1 + (y - y1) * stepU1
+			local texStartV = v1 + (y - y1) * stepV1
+			local texEndU = u1 + (y - y1) * stepU2
+			local texEndV = v1 + (y - y1) * stepV2
+
+			if ax > bx then
+				ax, bx = swap(ax, bx)
+				texStartU, texEndU = swap(texStartU, texEndU)
+				texStartV, texEndV = swap(texStartV, texEndV)
+			end
+
+			local texU = texStartU
+			local texV = texStartV
+
+			local tStep = 1 / (bx - ax)
+			local t = 0
+
+			for x = ax, bx do
+				texU = texStartU * (1 - t) + texEndU * t
+				texV = texStartV * (1 - t) + texEndV * t
+				print()
+				print('v1: ' .. v1 .. ', dv1: ' .. dv1 .. ', stepV1: ' .. stepV1)
+				print("texStartU: " .. texStartU .. ", texEndU: " .. texEndU)
+				print("texStartV: " .. texStartV .. ", texEndV: " .. texEndV)
+				print("t: " .. t .. ", texU: " .. texU .. ", texV: " .. texV)
+
+				love.graphics.setColor(texData:getPixel(texU, texV))
+				love.graphics.points(x, y)
+
+				t = t + tStep
+			end
+		end
+	end
+
+	local dy1 = math.floor(y3 - y2)
+	local dx1 = math.floor(x3 - x2)
+	local dv1 = math.floor(v3 - v2)
+	local du1 = math.floor(u3 - u2)
+
+	if dy1 ~= 0 then aStepX = dx1 / math.abs(dy1) end
+	if dy2 ~= 0 then bStepX = dx2 / math.abs(dy2) end
+
+	if dy1 ~= 0 then stepU1 = du1 / math.abs(dy1) end
+	if dy1 ~= 0 then stepV1 = dv1 / math.abs(dy1) end
+
+	if dy1 ~= 0 then
+		for y = y2, y3 do
+			local ax = x2 + (y - y2) * aStepX
+			local bx = x1 + (y - y1) * bStepX
+			local texStartU = u2 + (y - y2) * stepU1
+			local texStartV = v2 + (y - y2) * stepV1
+			local texEndU = u1 + (y - y1) * stepU2
+			local texEndV = v1 + (y - y1) * stepV2
+
+			if ax > bx then
+				ax, bx = swap(ax, bx)
+				texStartU, texEndU = swap(texStartU, texEndU)
+				texStartV, texEndV = swap(texStartV, texEndV)
+			end
+
+			local texU = texStartU
+			local texV = texStartV
+
+			local tStep = 1 / (bx - ax)
+			local t = 0
+
+			for x = ax, bx do
+				texU = texStartU * (1 - t) + texEndU * t
+				texV = texStartV * (1 - t) + texEndV * t
+
+				love.graphics.setColor(texData:getPixel(texU, texV))
+				love.graphics.points(x, y)
+
+				t = t + tStep
+			end
+		end
+	end
 end
 
 function loadFromObjFile(filename)
-	filename = 'src/obj_files/' .. filename
+	filename = 'src/models/obj_files/' .. filename
 
 	-- make sure file exists
 	assert(fileExists(filename), 'file does not exist')
